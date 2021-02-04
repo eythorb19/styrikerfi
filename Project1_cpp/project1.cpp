@@ -3,11 +3,9 @@
 #include <queue>
 #include <vector>
 
-
-
 //  My libs
 #include "lib/Manager.cpp"
-#include "../constants/priority.cpp"
+#include "constants/priority.cpp"
 
 //  Google things: C++ and function
 //  Geeksforgeeks command line arguments in cpp
@@ -18,7 +16,6 @@ string getNextWord(string command);
 string getFirstWord(string command);
 
 int main(int argc, char *argv[]) {
-
 
     //  Scope 1 (main)
     if(2 > 3) {
@@ -48,7 +45,7 @@ int main(int argc, char *argv[]) {
     //  Get next word prufa
     printf("Complete sentence: %s, secondWord %s\n", userName.c_str(), getNextWord(userName).c_str());
     printf("First word: %s, secondWord %s\n", getFirstWord(userName).c_str(), getNextWord(userName).c_str());
-*/
+*/   
 
     if (argc > 1)
     {
@@ -109,7 +106,7 @@ int main(int argc, char *argv[]) {
     */
 
     Manager myMan = Manager(&processes);
-    myMan.create(PRIORITY_LOW);
+    myMan.create();
 
     PCB* firstValue = processes.front();
     processes.pop();

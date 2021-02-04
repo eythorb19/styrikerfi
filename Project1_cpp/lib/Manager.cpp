@@ -17,6 +17,7 @@ private:
     void timeout(); // in here?
     void scheduler();
     void init();
+    queue<PCB*> *_processees;
 
 
 public:
@@ -28,8 +29,10 @@ public:
     int getMyNumber();
     void setMyNumber(int);
 
-    
-    void create(int priority);
+    // void create(int priority);
+    void create();
+
+
 
 
 
@@ -82,7 +85,7 @@ void Manager::create() {
     //  Hér er hluturinn búinn til út fyrir (heap). Deletast ekki nema að við köllum sérstaklega í delete
     PCB *myNewPCB = new PCB();
 
-    _processees ->push(myNewPCB) 
+    _processees ->push(myNewPCB);
 
     //  When we finish using everything that was created with the keyword new, we must delete it from the memory heap
     // delete myNewPCB;        //  Til þess að deleta. Annars verður minnisleki
