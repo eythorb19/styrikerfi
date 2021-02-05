@@ -1,3 +1,4 @@
-PRIORITY_LOW = 0
-PRIORITY_MED = 1
-PRIORITY_HIGH = 2
+#   Priorities for the processes
+LOW = 0
+MED = 1
+HIGH = 2
