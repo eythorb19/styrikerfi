@@ -1,53 +1,72 @@
 import constants.priority as PRIORITY
 from lib.Manager import Manager
+from config import log, getInput
+import collections
+
 
 def main():
 
     #   Initialize the Manager
     manager = Manager()
 
+    fileInput = getInput()
+
     while True:
-        userInput = input() #   cmd <i>
+        
+        #   If input from file -- Go to config file to set fileInput = True and the path!
+        if fileInput!= None:
+            if len(fileInput) != 0:
+                userInput = fileInput.popleft()
+            else:
+                fileInput = None
+
+        # wait for cmd line input
+        else:
+            userInput = input()         #   cmd <i>
 
         words = userInput.split()
         cmd = words[0]
 
-        #   Initialize the system. 
-        if cmd == "in":
-            manager = Manager()     #   New manager
+        #   Error check input
+        if (cmd == "cr" or cmd =="de" or cmd == "rq" or cmd == "rl") and len(words) !=2:
+                log("error: parameter missing")
+                print("-1")
         
-        #   Create process 
-        elif cmd == "cr":
-
-            # try:
-            priority = int(words[1])
-            manager.create(priority)                     #   Create new process
-            
-            # except: 
-            #     print("Priority missing")
-
-        #   Destroy process
-        elif cmd == "de":
-
-            # try: 
-            process = int(words[1])
-            manager.destroy(process)
-            
-            # # except:
-            # #     print("Process id missing")
-            
-        #   Reqqueset resource 
-        elif cmd == "rq":
-            manager.request(words[1])
-
-        elif cmd == "rl":
-            manager.release(words[1])
-
-        elif cmd == "to":
-            manager.timeout()
-
         else:
-            print("Invalid Input command.")
+            #   Initialize the system. 
+            if cmd == "in":
+                manager = Manager()     #   New manager
+                print()
+                output = 0
+            
+            #   Create process 
+            elif cmd == "cr":
+                output = manager.create(int(words[1]))
+                
+            #   Destroy process
+            elif cmd == "de":
+                    output = manager.destroy(int(words[1]))
+                
+            #   Request resource 
+            elif cmd == "rq":
+                output = manager.request(int(words[1]))
+
+            elif cmd == "rl":
+                output = manager.release(int(words[1]))
+
+            #   Timeout
+            elif cmd == "to":
+                output = manager.timeout()
+
+            else:
+                log("Invalid input command")
+                print(str(-1) + " ")
+            
+            print(str(output), end =" ")
+
+
+                
+
 
 if __name__ == "__main__":
     main()

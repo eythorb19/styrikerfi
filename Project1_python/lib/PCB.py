@@ -5,7 +5,7 @@ import collections
 
 class PCB:
     #   TODO: Add priority
-    def __init__(self, parent, priority = None):
+    def __init__(self, parent, priority):
         self.parent = parent
         self.priority = priority
         self.children = collections.deque()
