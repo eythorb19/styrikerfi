@@ -12,7 +12,6 @@ class Manager:
         self.RLn = [None]*3                 #   Array of ready lists
         self.context = PRIORITY.LOW         #   Priority context. Changes if context switch.
         self.PCBcount = 1                   #   Processes in the PCBn 
-        self.running = 0
 
         #   Initialize RCB
         for i in range(len(self.RCBn)):
@@ -39,7 +38,7 @@ class Manager:
 
         #   Get the ID of the currently running process (parent)
         if self.PCBcount != 0:  #  If not first process
-            parentId = self.running          
+            parentId = self.__runningProcess()          
         else:
             parentId = None
 
@@ -71,7 +70,7 @@ class Manager:
 
         #   Call scheduler
         self.__scheduler()
-        return self.__feedback()    
+        return self.__runningProcess()    
 
 
     def destroy(self, processId):
@@ -86,11 +85,11 @@ class Manager:
             log("error")
             return -1
 
-        if processId != self.running:        
+        if processId != self.__runningProcess():        
             log("Not destroying self.")
 
             #   Check if the process is a child of currently running process
-            if self.PCBn[self.running].children.count(processId) == 0:
+            if self.PCBn[self.__runningProcess()].children.count(processId) == 0:
                 log("Not destroying child.")
                 return -1
             
@@ -103,7 +102,7 @@ class Manager:
         log(str(processCount - self.PCBcount) + " processes destroyed.")
         
         self.__scheduler()
-        return self.__feedback()
+        return self.__runningProcess()
 
 
 
@@ -117,41 +116,44 @@ class Manager:
             return -1
 
         #   Already has this resource
-        if self.PCBn[self.running].resources.count(resourceId) > 0:
-            log("Error: Resource " + str(resourceId) + " already allocated to process " + str(self.running))
+        if self.PCBn[self.__runningProcess()].resources.count(resourceId) > 0:
+            log("Error: Resource " + str(resourceId) + " already allocated to process " + str(self.__runningProcess()))
             return -1
 
         #   Resource is FREE
         if self.RCBn[resourceId].state == STATE.FREE:
             self.RCBn[resourceId].state = STATE.ALLOCATED               #   Set resource state to allocated
-            self.PCBn[self.running].resources.append(resourceId)    #   Insert resource r into list of resources of running process
+            self.PCBn[self.__runningProcess()].resources.append(resourceId)    #   Insert resource r into list of resources of running process
             
-            log("Resource " + str(resourceId) +  " allocated to process " + str(self.running))
+            log("Resource " + str(resourceId) +  " allocated to process " + str(self.__runningProcess()))
 
-        #   Resource is BLOCKED
+        #   Process is BLOCKED
         else:
-            self.RCBn[resourceId].state = STATE.BLOCKED 
+            self.PCBn[self.__runningProcess()].state = STATE.BLOCKED 
             self.RCBn[resourceId].waitList.append(self.RLn[self.context].popleft())    #   Move process from ready list to waitlist
 
-            log("process " + str(self.running) + " blocked")
+            log("process blocked")
         
         self.__scheduler()
-        return self.__feedback()
+        return self.__runningProcess()
         
 
 
-
-    def release(self, resourceId):
+    def release(self, resourceId, processId):
         '''Currently running process relases a resource.'''
 
+        #   If called from the shell
+        if processId == -2:
+            processId = self.__runningProcess()
+
         #   Throw error if process not holding resource
-        if self.PCBn[self.running].resources.count(resourceId) == 0:
+        if self.PCBn[processId].resources.count(resourceId) == 0:
             log("Process not holding resource " + str(resourceId))
             log("error")
             return -1
 
         #   Remove resource from resource list of running process
-        self.PCBn[self.running].resources.remove(resourceId)
+        self.PCBn[processId].resources.remove(resourceId)
 
         #   If resource waitlist is empty, set state free
         if len(self.RCBn[resourceId].waitList) == 0:
@@ -159,23 +161,27 @@ class Manager:
 
         #   Else assign resource to next process on waitlist
         else:
-            nextProcessId = self.RCBn[resourceId].waitlist.popleft()    #   Pop first process on resource WL
+            nextProcessId = self.RCBn[resourceId].waitList.popleft()    #   Pop first process on resource WL
             priority = self.PCBn[nextProcessId].priority                #   Get the priority of the process
             self.RLn[priority].append(nextProcessId)                    #   Add to corresponding RL
             self.PCBn[nextProcessId].resources.append(resourceId)       #   Add resource to processes resources
+            self.PCBn[nextProcessId].state = STATE.READY
             
             log("Resource " + str(resourceId) + " released. Belongs now to process " + str(nextProcessId))
         
         self.__scheduler()
-        return self.__feedback()
+        return self.__runningProcess()
 
 
     def timeout(self):
         '''Time-sharing function. Stop currently running process and add to the back of RL.'''
+
+        # self.__releaseResources(self.__runningProcess())
+
         self.RLn[self.context].append(self.RLn[self.context].popleft())
         
         self.__scheduler()
-        return self.__feedback()
+        return self.__runningProcess()
 
 
 #   ----------  PRIVATE ---------------
@@ -189,17 +195,16 @@ class Manager:
             currentEmpty = (len(self.RLn[self.context]) == 0)
 
             #   If something on RL and current priority context lower, or - if current context RL empty
-            if (len(self.RLn[i]) > 0) and (self.context <= i or currentEmpty):     
+            if (len(self.RLn[i]) > 0) and (self.context < i or currentEmpty):     
                 self.__contextSwitch(i)                                             #   Perform context switch
                 log("Context switch to priority " + str(i))
                 break
         
-        self.running = self.RLn[self.context][0]
-        log("Process " + str(self.running) + " running.")
+        log("Process " + str(self.__runningProcess()) + " running.")
 
-    def __feedback(self):
+    def __runningProcess(self):
         '''Returns the current running process'''
-        return(str(self.running))
+        return self.RLn[self.context][0]
 
 
     def __contextSwitch(self, context):
@@ -226,17 +231,21 @@ class Manager:
         
         #   Remove from resource wait lists
         else:
-            for r in range(self.RCBn):
+            for r in range(len(self.RCBn)):
                 if self.RCBn[r].waitList.count(processId) == 1:     #   If process is on ready list
                     self.RCBn[r].waitList.remove(processId)
 
         #   Release resources of process i
-        for r in self.PCBn[processId].resources:
-            self.RCBn[r].state = STATE.FREE
+        self.__releaseResources(processId)
         
         #   Free PCB of process
         self.PCBn[processId] = None
         self.PCBcount-=1
+
+    def __releaseResources(self, processId):
+        '''Release resources of proess'''
+        for r in list(self.PCBn[processId].resources):
+            self.release(r, processId)
 
         
     def __getFreeColumnPCB(self):

@@ -1,24 +1,19 @@
 import constants.priority as PRIORITY
 from lib.Manager import Manager
-from config import log, getInput
+from config import log, getInput, display
+import config 
 import collections
 
 
 def main():
-
-    #   Initialize the Manager
-    manager = Manager()
-
+  
     fileInput = getInput()
 
     while True:
-        
+
         #   If input from file -- Go to config file to set fileInput = True and the path!
-        if fileInput!= None:
-            if len(fileInput) != 0:
-                userInput = fileInput.popleft()
-            else:
-                fileInput = None
+        if fileInput!= None and len(fileInput) !=0:
+            userInput = fileInput.popleft()
 
         # wait for cmd line input
         else:
@@ -26,6 +21,9 @@ def main():
 
         words = userInput.split()
         cmd = words[0]
+        log("")
+        for i in range(len(words)):
+            log(words[i])
 
         #   Error check input
         if (cmd == "cr" or cmd =="de" or cmd == "rq" or cmd == "rl") and len(words) !=2:
@@ -45,14 +43,15 @@ def main():
                 
             #   Destroy process
             elif cmd == "de":
-                    output = manager.destroy(int(words[1]))
+                output = manager.destroy(int(words[1]))
                 
             #   Request resource 
             elif cmd == "rq":
                 output = manager.request(int(words[1]))
 
+            #   Release resource
             elif cmd == "rl":
-                output = manager.release(int(words[1]))
+                output = manager.release(int(words[1]), -2)
 
             #   Timeout
             elif cmd == "to":
@@ -62,10 +61,7 @@ def main():
                 log("Invalid input command")
                 print(str(-1) + " ")
             
-            print(str(output), end =" ")
-
-
-                
+            display(str(output))
 
 
 if __name__ == "__main__":
