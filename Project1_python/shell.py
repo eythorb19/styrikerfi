@@ -1,23 +1,37 @@
 import constants.priority as PRIORITY
 from lib.Manager import Manager
 from config import log, getInput, display
-import config 
-import collections
-
+import config as settings
 
 def main():
-  
-    fileInput = getInput()
+    
+    manager = Manager()
+    if settings.REALTIMEinput == False:     #   IF not realtime input, and program started with python3 shell.py
+        fileInput = getInput()
 
     while True:
 
-        #   If input from file -- Go to config file to set fileInput = True and the path!
+#----------  COMMENT IN FOR REALTIME CMD LINE INPUT. -------------------------------
+        # #  To start program: >> python3 shell.py
+
+        # print()
+        # userInput = input()         #   cmd <i>
+# ------------------------------------------------------------------------
+
+
+# -------------  COMMENT IN FOR FILEINPUT.  ---------------------------
+        #  To start program using input.txt: >> make
+        #  To start program using own file: >> python3 shell.py {filepath}
+
         if fileInput!= None and len(fileInput) !=0:
             userInput = fileInput.popleft()
-
-        # wait for cmd line input
         else:
-            userInput = input()         #   cmd <i>
+            print()
+            break
+# ------------------------------------------------------------------------
+
+
+#----   SHELL START --------------
 
         words = userInput.split()
         cmd = words[0]
@@ -30,6 +44,7 @@ def main():
                 log("error: parameter missing")
                 print("-1")
         
+        #   Execute command
         else:
             #   Initialize the system. 
             if cmd == "in":
@@ -51,7 +66,7 @@ def main():
 
             #   Release resource
             elif cmd == "rl":
-                output = manager.release(int(words[1]), -2)
+                output = manager.release(int(words[1]))
 
             #   Timeout
             elif cmd == "to":

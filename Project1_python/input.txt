@@ -1,23 +1,22 @@
 in
-cr 2
-cr 2
-cr 1
-to
 cr 1
 cr 1
-cr 2
+cr 1
 to
-de 2
 to
+rq 3
+to
+rq 3
+to
+to
+rl 3
 
 in
+cr 1
 cr 2
 cr 2
 cr 1
-to
-cr 1
-cr 1
-cr 2
-to
+rq 1
 de 2
+rq 1
 to

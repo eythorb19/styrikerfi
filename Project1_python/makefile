@@ -8,4 +8,4 @@ clear:
 	clear
 
 run:
-	python3 shell.py
+	python3 shell.py input.txt < output.txt

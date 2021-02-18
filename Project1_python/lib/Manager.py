@@ -15,7 +15,8 @@ class Manager:
 
         #   Initialize RCB
         for i in range(len(self.RCBn)):
-            self.RCBn[i] = RCB()
+            newRcb = RCB()
+            self.RCBn[i] = newRcb
 
         #   Initialize RL
         for i in range(len(self.RLn)):
@@ -28,7 +29,7 @@ class Manager:
         log("process 0 running")
 
 
-    def create(self, priority = None):
+    def create(self, priority):
         '''Creates a new process with priority 0,1,2.'''
 
         #   Error check the priority
@@ -106,7 +107,6 @@ class Manager:
 
 
 
-
     def request(self, resourceId):
         '''Running process requests a resource'''
 
@@ -129,8 +129,9 @@ class Manager:
 
         #   Process is BLOCKED
         else:
-            self.PCBn[self.__runningProcess()].state = STATE.BLOCKED 
-            self.RCBn[resourceId].waitList.append(self.RLn[self.context].popleft())    #   Move process from ready list to waitlist
+            self.PCBn[self.__runningProcess()].state = STATE.BLOCKED
+            blockedId = self.RLn[self.context].popleft()
+            self.RCBn[resourceId].waitList.append(blockedId)   #   Move process from ready list to waitlist
 
             log("process blocked")
         
@@ -139,11 +140,11 @@ class Manager:
         
 
 
-    def release(self, resourceId, processId):
+    def release(self, resourceId, processId=None):
         '''Currently running process relases a resource.'''
 
         #   If called from the shell
-        if processId == -2:
+        if processId == None:
             processId = self.__runningProcess()
 
         #   Throw error if process not holding resource
@@ -175,8 +176,6 @@ class Manager:
 
     def timeout(self):
         '''Time-sharing function. Stop currently running process and add to the back of RL.'''
-
-        # self.__releaseResources(self.__runningProcess())
 
         self.RLn[self.context].append(self.RLn[self.context].popleft())
         

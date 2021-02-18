@@ -1,17 +1,8 @@
 import collections
-
-#   Settings
+import fileinput
 
 #   Set this to true to get logs. Set to false to only get required output parameters.
 DEBUG = False
-
-#   Set this to true if you´re reading input from 1 specific file. Set the filepath
-FILEINPUT = True
-filepath = 'io/in_1'
-
-#   Error in 6 - virkar ef ég releasa resource á timeout process
-#   Wrong output in 7
-
 
 def log(s):
     '''Used for debugging.'''
@@ -24,17 +15,38 @@ def display(s):
         print(s, end =" ")
 
 
-def getInput():
-    if FILEINPUT:
+#   ***   IF TESTRUN = TRUE: 
+#           INPUT FILE IS SPECIFIED BELOW IN filepath
 
+#   ***   IF TESTRUN = FALSE: 
+#               DEFAULT INPUT FILE IS input.txt
+TESTRUN = False
+filepath = 'io/in_1'
+
+#   Set this to true for run-time input
+REALTIMEinput = False
+
+def getInput():
+    '''Get input from file specified in config.'''
+    fileInput = collections.deque()
+
+    #   INPUT FILE PATH SPECIFIED ABOVE  ***
+    if TESTRUN:
         file1 = open(filepath, 'r')
         lines = file1.readlines()
+    
+    #   INPUT IS DEFAULT INPUT.TXT (if make cmd is used)
+    else: 
+        lines = fileinput.input()
+    
+    #   Create a queue
+    for line in lines:
+        if line != "\n":
+            fileInput.append(line.rstrip())
 
-        fileInput = collections.deque()
-        for line in lines:
-            if line != "\n":
-                fileInput.append(line)
-        
-        return fileInput
+    return fileInput
+
+
+
 
     
