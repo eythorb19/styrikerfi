@@ -6,32 +6,35 @@ import config as settings
 def main():
     
     manager = Manager()
-    if settings.REALTIMEinput == False:     #   IF not realtime input, and program started with python3 shell.py
+    if settings.REALTIMEinput == False:     #   I not REALTIME input
         fileInput = getInput()
 
     while True:
 
-#----------  COMMENT IN FOR REALTIME CMD LINE INPUT. -------------------------------
-        # #  To start program: >> python3 shell.py
+#----------  REALTIME CMD LINE INPUT. -------------------------------
+#   settings.REALTIMEinput = True
 
-        # print()
-        # userInput = input()         #   cmd <i>
-# ------------------------------------------------------------------------
+        if settings.REALTIMEinput == True:
+            #  To start program: >> python3 shell.py
 
-
-# -------------  COMMENT IN FOR FILEINPUT.  ---------------------------
-        #  To start program using input.txt: >> make
-        #  To start program using own file: >> python3 shell.py {filepath}
-
-        if fileInput!= None and len(fileInput) !=0:
-            userInput = fileInput.popleft()
-        else:
             print()
-            break
+            userInput = input()         #   cmd <i>
 # ------------------------------------------------------------------------
 
 
-#----   SHELL START --------------
+# ------------- FILEINPUT.  ---------------------------
+#   settings.REALTIMEinput = False
+
+        else:
+            if fileInput!= None and len(fileInput) !=0:
+                userInput = fileInput.popleft()
+            else:
+                print()
+                break
+# ------------------------------------------------------------------------
+
+
+#----   START processing commands --------------
 
         words = userInput.split()
         cmd = words[0]

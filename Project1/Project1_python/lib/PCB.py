@@ -4,6 +4,7 @@ import collections
 
 
 class PCB:
+    '''PCB structure for a process.'''
     #   TODO: Add priority
     def __init__(self, parent, priority):
         self.parent = parent
