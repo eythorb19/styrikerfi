@@ -4,7 +4,7 @@ import collections
 #   DEBUG = True: All logs will be shown. 
 #   DEBUG = False: Only relevant output is shown.
 # ------------------------------------------------
-DEBUG = False
+DEBUG = True
 
 def log(s):
     '''Used for debugging.'''
@@ -19,6 +19,7 @@ def display(s):
 #--------------------------------------------------------
 # ------   FILE INPUT SETTINGS START ----------------------
 
+initFilePath = 'io/init'
 inputFilePath = 'io/input'
 
 def getInput(filepath):
