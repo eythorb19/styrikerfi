@@ -1,4 +1,4 @@
-default: clear run displayOutput
+default: clear run
 
 realTime: clear runReal
 
@@ -6,7 +6,7 @@ clear:
 	clear
 
 run:
-	python3 shell.py input.txt > output.txt
+	python3 driver.py > output.txt
 
 runReal:
 	python3 shell.py

@@ -4,7 +4,7 @@ import collections
 #   DEBUG = True: All logs will be shown. 
 #   DEBUG = False: Only relevant output is shown.
 # ------------------------------------------------
-DEBUG = True
+DEBUG = False
 
 def log(s):
     '''Used for debugging.'''

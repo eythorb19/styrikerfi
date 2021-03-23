@@ -5,9 +5,7 @@ import settings
 def main():
 
     initValues = getInput(settings.initFilePath)
-    val = 2097674
  
-
     ST = [int(val) for val in initValues[0].split(" ")]
     PT = [int(val) for val in initValues[1].split(" ")]
 
@@ -15,14 +13,13 @@ def main():
     log(PT)
 
     manager = Manager(ST,PT)
+    returnVal = ""
 
     VA = [int(val) for val in getInput(settings.inputFilePath)[0].split(" ")]
 
     for i in range(len(VA)):
-        manager.virtualAddressTranslation(VA[i])
-
-    
-
+        PA = manager.virtualAddressTranslation(VA[i])
+        display(str(PA))
     
 if __name__ == "__main__":
     main()
