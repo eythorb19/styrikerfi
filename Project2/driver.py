@@ -13,7 +13,8 @@ def main():
     log(PT)
 
     manager = Manager(ST,PT)
-    returnVal = ""
+    manager.printPM()
+    manager.printDisk()
 
     VA = [int(val) for val in getInput(settings.inputFilePath)[0].split(" ")]
 

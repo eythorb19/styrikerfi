@@ -8,5 +8,5 @@ The following VA translations use the free frames 2, 4, 5 when a page fault occu
 The input file contains:
 2097162 2097674 2359306 2359818
 
-he output file should contain
+The output file should contain
 5130 1034 6666 2570
