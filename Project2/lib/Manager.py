@@ -1,12 +1,17 @@
+#   Author: Eyþór Óli Borgþórsson
+#   Email: eythorb19@ru.is
+#   Date: 27.3.2021
+
 import constants.sizes as sizes
 from settings import log
 from lib.VirtualAddress import VirtualAddress
-import collections
 
 class Manager:
+    ''' Manager of Physical memory and disk. Performs Virtual Address Translation'''
+
     def __init__(self, ST, PT):
         self.PM = [0]*(sizes.FRAME_SIZE*sizes.SEGMENT_SIZE)      #   Physical memory
-        self.frames = [False]*sizes.SEGMENT_SIZE                    #   Array keeping track of occupied frames, False = free
+        self.frames = [False]*sizes.SEGMENT_SIZE                 #   Array keeping track of occupied frames, False = free
 
         #   Frames 0 and 1 occupied for segment table
         self.frames[0] = True
@@ -17,45 +22,37 @@ class Manager:
         for i in range(sizes.BLOCK_QTY):
             block = [0]*sizes.BLOCK_SIZE
             self.disk[i] = block
-    
-        self.initPM(ST,PT)                                          #   Initialize physical memory
 
+        #   Initialize physical memory
+        self.initPM(ST,PT)
+
+        #   Log contents of disk and PM
+        log("\n INIT STATE OF DISK AND PM")
+        self.printPM()
+        self.printDisk()
 
     def initPM(self, ST, PT):
         '''Initializes Physical memory. Takes in ST (Segment Table) and PT (Page Table)'''
 
-        #   INPUT (ST and PT)
-        #-------------------------------------------------------------------------------------
-        # ss_1    zs_1     fs_1      |  ss_2   zs_2   fs_2       ....   ss_i  zs_i  fs_i  #         SEGMENT TABLE [ss_1, zs_1, fs_1, ss_2 ... fs_i]
-        #-------------------------------------------------------------------------------------
-        # sp_11    pp_11    fp_11    |  sp_21    pp_21    fp_21    |  sp_i1    pp_i1    fp_i1 
-        # sp_12    pp_12    fp_12    |  sp_22    pp_22    fp_22    |  sp_i2    pp_i2    fp_i2       PAGE TABLE  [sp_11, pp_11, fp_11, sp_12.. sp_21...fp_ij]
-        #            .               |             .               |             .
-        #            .               |             .               |             .
-        # sp_1j    pp_1j    fp_1j    |  sp_2j    pp_2j    fp_2j    |  sp_ij   pp_ij     fp_ij
-
-        segments = int(len(ST)/3)
-        print("Segments " + str(segments))
-
-        pages= int(len(PT)/3)
-        print("Pages: " + str(pages))
+        segments = int(len(ST)/3)       #   Number of segments
+        pages= int(len(PT)/3)           #   Number of pages
         
         #   Segment table
         for i in range(segments):
-            ss = ST[3*i]       #    Segment ss
-            zs = ST[3*i+1]     #    Size zs of segment ss
-            fs = ST[3*i+2]     #    Frame fs where PT of segment ss resides in
+            ss = ST[3*i]            #    Segment ss
+            zs = ST[3*i+1]          #    Size zs of segment ss
+            fs = ST[3*i+2]          #    Frame fs where PT of segment ss resides in
 
-            self.PM[2*ss] = zs  
-            self.PM[2*ss+1] = fs
+            self.PM[2*ss] = zs      #   Insert segment size into segment table
+            self.PM[2*ss+1] = fs    #   Insert frame of PT into segment table
 
             self.frames[fs] = True  #   Set frame occupied
 
+        #   Page table
         for i in range(pages):
-            sp = PT[3*i]       #    Segment sp
-            pp = PT[3*i+1]     #    Page pp of segment ss
-            fp = PT[3*i+2]     #    Frame fp where page pp resides in
-
+            sp = PT[3*i]            #    Segment sp
+            pp = PT[3*i+1]          #    Page pp of segment ss
+            fp = PT[3*i+2]          #    Frame fp where page pp resides in
             fs = self.PM[2*sp+1]    #   Frame fs where PT of segment ss resides in
 
             if fs >= 0:
@@ -63,58 +60,71 @@ class Manager:
                 self.frames[fp] = True                      #   Set frame occupied
 
             else:
-                self.disk[abs(fs)][pp] = fp                      #   Write frame number to disk at block fs, page pp
-
+                self.disk[abs(fs)][pp] = fp                 #   Write frame number to disk at block fs, page pp
 
     def virtualAddressTranslation(self, VA):
         '''Translates virtual address into Physical address'''
-        log("\n")
-        va = VirtualAddress(VA)
-        log("VA: " + str(VA))
-        log("s: " + str(va.s) + " p: " + str(va.p) + " w: " + str(va.w)  + " pw: " + str(va.pw))
 
-        segmentSizeIndex = 2*va.s
-        segmentSize = self.PM[segmentSizeIndex]     #   Size of segment s
-
-        frameNumberIndex = 2*va.s+1
-        frameNumberOfPT = self.PM[frameNumberIndex]     #   Frame number of Page table
-
-        pageIndex = self.PM[frameNumberOfPT]*sizes.FRAME_SIZE+va.p    #   Index to page inside frame {frameNumberOfPT}
-
-        #   If VA outside segment boundary
-        if va.pw >= segmentSize:
-            log("Error: VA is outside of the segment boundary")
+        va = VirtualAddress(VA)                              #   Break VA into components s,p,w,pw
+        self.displayComponents(va)
+        
+        #   VA outside segment boundary
+        if va.pw >= self.getSegmentSize(va.s):
+            log("Error: VA is outside of the segment boundary")             
             return -1
 
-        #   If PT not resident: Page Fault
-        elif frameNumberOfPT < 0:
+        #   PT not resident: Page Fault
+        elif self.getFrameNumberPT(va.s) < 0:
             log("page fault: PT is not resident")
 
-            freeFrame = self.getFreeFrame()                                 #   Free frame allocated, and frame marked occupied
-            self.readBlock(abs(frameNumberOfPT), freeFrame*sizes.FRAME_SIZE)     #   Read disk block b = |PM[2s + 1]| into PM starting at location f1*512
-            self.PM[frameNumberIndex] = freeFrame                           #   Update ST entry PM[2s+1] = f1
+            freeFrame = self.getFreeFrame()                                                 #   Free frame allocated, and frame marked occupied
+            self.readBlock(abs(self.getFrameNumberPT(va.s)), freeFrame*sizes.FRAME_SIZE)    #   Read disk block b = |PM[2s + 1]| into PM starting at location f1*512
+            self.PM[self.getFrameNumberIndex(va.s)] = freeFrame                             #   Update ST entry PM[2s+1] = f1
         
-        #   If page is not resident: Page Fault
-        elif pageIndex < 0:
+        #   Page not resident: Page Fault
+        elif self.getPageofPT(va.s, va.p) < 0:
             log("Page fault: page is not resident")
 
-            freeFrame = self.getFreeFrame()                                 #   Free frame allocated, and frame marked occupied
-            self.readBlock(abs(pageIndex), freeFrame)                       #  Read disk block b = |PM[PM[2s + 1]*512 + p]| into PM staring at f2*512                  
-            self.PM[pageIndex] = freeFrame                                  #   Update PT entry PM[PM[2s + 1]*512 + p] = f2
+            freeFrame = self.getFreeFrame()                                                 #   Free frame allocated, and frame marked occupied
+            self.readBlock(abs(self.getPageofPT(va.s, va.p)), freeFrame)                    #  Read disk block b = |PM[PM[2s + 1]*512 + p]| into PM staring at f2*512                  
+            self.PM[self.getPageIndex(va.s, va.p)] = freeFrame                              #   Update PT entry PM[PM[2s + 1]*512 + p] = f2
 
-        
-        pageTableIndex = self.PM[2*va.s+1]*sizes.FRAME_SIZE + va.p
-        log("Page table index is: " + str(pageTableIndex))
-        PA = self.PM[pageTableIndex] * sizes.FRAME_SIZE + va.w
-        log("Physical address is: " + str(PA))
-        return PA
+        #   Calculate and return physical address
+        log("PHYSICAL ADDRESS is: " + str(self.getPhysicalAddress(va.s, va.p, va.w)) + "\n")
+        return self.getPhysicalAddress(va.s, va.p, va.w)
 
-    def printValues(self, segmentNo, pageFrame):
-        '''Print value of segment'''
-        index = 2*segmentNo
-        log("Segment " + str(segmentNo) + " contains value: " + str(self.PM[index]) + " +1: " + str(self.PM[index+1]))
-        log("It´s PT " + str(self.PM[self.PM[index+1]*sizes.FRAME_SIZE+pageFrame]))
 
+    #   ---------------------------
+    #   HELP FUNCTIONS
+    #   ---------------------------
+
+    def getSegmentSizeIndex(self,s):
+        ''' Returns segment size index'''
+        return 2*s
+
+    def getFrameNumberIndex(self,s):
+        ''' Returns frame number index '''
+        return 2*s+1
+
+    def getSegmentSize(self, s):
+        ''' Get size of segment s.'''
+        return self.PM[self.getSegmentSizeIndex(s)]
+
+    def getFrameNumberPT(self, s):
+        ''' Get frame number of PT at index 2s+1'''
+        return self.PM[self.getFrameNumberIndex(s)]
+
+    def getPageIndex(self,s,p):
+        ''' Get page index at self.PM[2s+1] * frame_size + p'''
+        return self.getFrameNumberPT(s) * sizes.FRAME_SIZE + p
+
+    def getPageofPT(self,s,p):
+        ''' Get page of PT'''
+        return self.PM[self.getPageIndex(s,p)]
+
+    def getPhysicalAddress(self, s, p, w):
+        ''' Returns physical address'''
+        return self.PM[self.getPageIndex(s,p)]*sizes.FRAME_SIZE + w
 
     def getFreeFrame(self):
         ''' Finds free frame, marks it occupied and returns it.'''
@@ -123,39 +133,38 @@ class Manager:
                 self.frames[i] = True
                 return i
 
-
     def readBlock(self,b,m):
         '''Copies block D[b] into PM frame starting at location PM[m]. Updates ST entry'''
-
         block = self.disk[b]
-
-        for i in range(len(block)):         #   Read block to physical memory
-            self.PM[m+i] = block[i] 
-
+        for i in range(len(block)):         
+            if block[i] != 0:
+                self.PM[m+i] = block[i]     #   Read block contents to physical memory
     
+
+    #   ----------------------------
+    #   PRINT FUNCTIONS
+    #   ---------------------------
+
+    def displayComponents(self, va):
+        ''' Displays segment size, frame number, page index and page for VA translation'''
+        log("------------\nVA values \n---------------")
+        log(va.getVa())
+        log("Segment size: " + str(self.getSegmentSize(va.s)))
+        log("Frame number of PT: " + str(self.getFrameNumberPT(va.s)))
+        log("Page index is: " + str(self.getPageIndex(va.s, va.p)))
+        log("Page is: " + str(self.getPageofPT(va.s, va.p)))
+
     def printPM(self):
-        log("Physical memory \n --------------")
+        ''' Prints contents of the physical memory, where values are not 0'''
+        log("--------------\nPhysical memory \n--------------")
         for i in range(len(self.PM)):
             if self.PM[i] != 0:
-                print(str(i) + "  |" + str(self.PM[i]) + "| \n")
+                log(str(i) + "  |" + str(self.PM[i]) + "|")
 
     def printDisk(self):
-        log("Disk \n ---------------")
-
+        ''' Prints contents of the disk, where values are not 0'''
+        log("--------------\nDisk \n---------------")
         for b in range(sizes.BLOCK_QTY):
             for f in range(sizes.BLOCK_SIZE):
                 if self.disk[b][f] != 0:
-                    print(str(b) + "  |" + str(self.disk[b][f]) + "| \n")
-
-
-# • Paging Disk
-# • emulated as a two‐dimensional integer array, D[B][512]
-# • B: number of blocks (e.g., 1024)
-# • 512: block size (= page size)
-# • Disk may only be accessed one block at a time:
-# • read_block(b, m) copies block D[b] into PM frame starting at location PM[m]
-
-        # Demand paging
-        #   Búum til annað array eða vector. 
-        #   Á að representa eins og það sé veirð að sækja gögn af disk/skrá.
-        #   2D integer array D[B][512] hversu mikið á að sækja
+                    log(str(b) + "  |" + str(self.disk[b][f]) + "|")

@@ -4,7 +4,7 @@ import collections
 #   DEBUG = True: All logs will be shown. 
 #   DEBUG = False: Only relevant output is shown.
 # ------------------------------------------------
-DEBUG = True
+DEBUG = False
 
 def log(s):
     '''Used for debugging.'''
@@ -19,8 +19,8 @@ def display(s):
 #--------------------------------------------------------
 # ------   FILE INPUT SETTINGS START ----------------------
 
-initFilePath = 'io/init'
-inputFilePath = 'io/input'
+initFilePath = 'io/init.txt'
+inputFilePath = 'io/input.txt'
 
 def getInput(filepath):
     '''Get input from file input.txt, or file specified in config in case of testrun.'''

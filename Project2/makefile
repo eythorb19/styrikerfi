@@ -1,15 +1,10 @@
-default: clear run
-
-realTime: clear runReal
+default: clear run displayOutput
 
 clear:
 	clear
 
 run:
-	python3 driver.py > output.txt
-
-runReal:
-	python3 shell.py
+	python3 driver.py > io/output.txt
 
 displayOutput:
-	cat output.txt
+	cat io/output.txt
