@@ -6,7 +6,7 @@ class VirtualAddress:
         self.s = self.bitwiseRightShift(VA, 18)     
         self.p = self.bitwiseMask(self.bitwiseRightShift(VA,9),0x1FF)
         self.w = self.bitwiseMask(VA, 0x1FF)
-        self.pw = self.bitwiseMask(VA,0x3FFF)
+        self.pw = self.bitwiseMask(VA,0x3FFFF)
 
     def bitwiseRightShift(self,integer,shift):
         '''Bitwise right shift.'''

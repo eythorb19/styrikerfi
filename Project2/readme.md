@@ -66,6 +66,15 @@ import settings
 
 ##  Before running
 
+## Path of init and input
+The path is set in the file settings.py. <br>
+If you want to run the program with a file at another location you need to change thee parameters.
+
+```
+initFilePath = 'io/init.txt'
+inputFilePath = 'io/input.txt'
+```
+
 ### Init
 Contents of the init file should be in the form:
 
@@ -79,6 +88,7 @@ Line2: s1 p1 f1 s2 p2 f2 … sm pm fm
 si zi fi means: PT of segment si resides in frame fi, length of segment si is zi <br />
 sj pj fj means: page pj of segment sj resides in frame fj
 
+
 ### Input
 Contents of the input file are virtual addresses delimited with space:
 ```
@@ -86,6 +96,7 @@ io/input.txt:
 
 va1 va2 va3
 ```
+
 
 ## How to run
 
